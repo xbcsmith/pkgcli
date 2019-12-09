@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
+	yaml "gopkg.in/yaml.v3"
 	"gotest.tools/assert"
 	is "gotest.tools/assert/cmp"
 )
@@ -119,37 +122,37 @@ func NewTests() *Tests {
 	return tests
 }
 
-func TestConverterJson(t *testing.T) {
+func TestConvertJson(t *testing.T) {
 	tests := NewTests()
 	expected := `- key:`
-	actual, err := converter(tests.a, false)
+	actual, err := Convert(tests.a, false)
 	assert.Assert(t, is.Nil(err))
 	assert.Assert(t, !IsJSON(actual))
 	assert.Assert(t, is.Contains(string(actual), expected))
 }
 
-func TestConverterAlsoJson(t *testing.T) {
+func TestConvertAlsoJson(t *testing.T) {
 	tests := NewTests()
 	expected := `brackets:`
-	actual, err := converter(tests.e, false)
+	actual, err := Convert(tests.e, false)
 	assert.Assert(t, is.Nil(err))
 	assert.Assert(t, !IsJSON(actual))
 	assert.Assert(t, is.Contains(string(actual), expected))
 }
 
-func TestConverterYaml(t *testing.T) {
+func TestConvertYaml(t *testing.T) {
 	tests := NewTests()
 	expected := `"bar": [`
-	actual, err := converter(tests.b, false)
+	actual, err := Convert(tests.b, false)
 	assert.Assert(t, is.Nil(err))
 	assert.Assert(t, IsJSON(actual))
 	assert.Assert(t, is.Contains(string(actual), expected))
 }
 
-func TestConverterYamlNoIndent(t *testing.T) {
+func TestConvertYamlNoIndent(t *testing.T) {
 	tests := NewTests()
 	expected := `bar":[`
-	actual, err := converter(tests.b, true)
+	actual, err := Convert(tests.b, true)
 	assert.Assert(t, is.Nil(err))
 	assert.Assert(t, IsJSON(actual))
 	assert.Assert(t, is.Contains(string(actual), expected))
@@ -161,9 +164,4 @@ func TestGetEnv(t *testing.T) {
 	assert.Assert(t, foo == "1")
 	bar := GetEnv("BAR", "42")
 	assert.Assert(t, bar == "42")
-}
-
-func TestNewULID(t *testing.T) {
-	u := NewULID()
-	assert.Assert(t, len(u) == 26)
 }

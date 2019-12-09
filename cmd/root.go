@@ -6,17 +6,22 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/xbcsmith/pkgcli/cmd/pkg"
 )
 
 // RootCmd for cobra
 var RootCmd = &cobra.Command{
-	Use:   "lfscli",
-	Short: "Command Line LFS helper",
-	Long:  `Command Line LFS utility for managing package installs`,
+	Use:   "pkgcli",
+	Short: "Command Line Package helper",
+	Long:  `Command Line utility for managing package installs`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		viper.SetEnvPrefix("PACKAGE")
+		viper.AutomaticEnv()
+		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
 			return err
@@ -46,11 +51,10 @@ func init() {
 	// pkgs
 	pkgCmd := pkg.NewPkgCmd()
 	pkgCreate := pkg.NewCreateCmd()
-	pkgBuild := pkg.NewQueryCmd()
-	pkgSearch := pkg.NewSearchCmd()
+	pkgBuild := pkg.NewBuildCmd()
+
 	pkgCmd.AddCommand(pkgCreate)
 	pkgCmd.AddCommand(pkgBuild)
-	pkgCmd.AddCommand(pkgSearch)
 
 	//Add commands to root
 	RootCmd.AddCommand(pkgCmd)

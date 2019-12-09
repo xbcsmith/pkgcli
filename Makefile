@@ -1,5 +1,5 @@
-PACKAGE  = github.com/xbcsmith/lfs/lfscli
-BINARY    = bin/lfscli
+PACKAGE  = github.com/xbcsmith/pkgcli
+BINARY   = bin/pkgcli
 COMMIT  ?= $(shell git rev-parse --short=16 HEAD)
 gitversion := $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
 			cat $(CURDIR)/.version 2> /dev/null || echo 0.1.0-0)
@@ -10,6 +10,7 @@ PKGS     = $(or $(PKG),$(shell $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/")
 TESTPKGS = $(shell $(GO) list -f '{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' $(PKGS))
 GOLDFLAGS = "-X $(PACKAGE)/config.Version=$(VERSION) -X $(PACKAGE)/config.Commit=$(COMMIT)"
 
+export GO111MODULE=on
 
 # Allow tags to be set on command-line, but don't set them
 # by default
@@ -31,17 +32,23 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 .PHONY: all
 all: static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin
 
+.PHONY: release
+release: update-version static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin revert-version
+
 .PHONY: static-tests
 static-tests: fmt lint vet ## Run fmt lint and vet against all source
 
 .PHONY: linux
 linux: static-tests test $(BINARY)
 
+.PHONY: linux-release
+linux-release: update-version static-tests test $(BINARY) revert-version
+
+
 .PHONY: darwin
 darwin: static-tests test $(BINARY)-darwin
 
-.PHONY:arm64
-arm64: static-tests test $(BINARY)-arm64
+
 
 SOURCES = $(shell find -name vendor -prune -o -name \*.go -print)
 
@@ -64,7 +71,7 @@ GOIMPORTS = $(TOOLS)/goimports
 $(GOIMPORTS): ; $(info $(M) building goimports…)
 	$Q go build -o $@ golang.org/x/tools/cmd/goimports
 
-GOLINT = $(TOOLS)/golint
+GOLINT = $(TOOLS)/golint 
 $(GOLINT): ; $(info $(M) building golint…)
 	$Q go build -o $@ golang.org/x/lint/golint
 
@@ -137,6 +144,14 @@ test-coverage: fmt lint test-coverage-tools ; $(info $(M) running coverage tests
 	$Q $(GO) tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
 	$Q $(GOCOV) convert $(COVERAGE_PROFILE) | $(GOCOVXML) > $(COVERAGE_XML)
 
+.PHONY: update-version
+update-version:
+	$Q ./scripts/update_version.sh
+
+.PHONY: revert-version
+revert-version:
+	$Q git checkout cmd/version.go
+
 .PHONY: lint
 lint: $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint change ret=1 to make lint required
 	$Q ret=0 && for pkg in $(PKGS); do \
@@ -161,6 +176,7 @@ test: ; $(info $(M) running tests…) @
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
 	@rm -rf bin tools vendor
 	@rm -rf tests/tests.* tests/coverage.*
+	@rm -rf cmd/version.bak.*
 
 .PHONY: help
 help:
@@ -170,3 +186,6 @@ help:
 .PHONY: version
 version:
 	@echo $(VERSION)
+
+
+

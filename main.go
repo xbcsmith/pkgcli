@@ -1,6 +1,6 @@
 package main
 
-import "github.com/xbcsmith/lfs/lfscli/cmd"
+import "github.com/xbcsmith/pkgcli/cmd"
 
 func main() {
 	cmd.Execute()

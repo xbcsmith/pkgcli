@@ -2,7 +2,7 @@ package cmd
 
 const (
 	// AppName is application name
-	AppName = "lfscli"
+	AppName = "pkgcli"
 	// AppVersion is the application version
 	AppVersion = "dev"
 	// AppRelease is the application release

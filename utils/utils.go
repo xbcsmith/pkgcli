@@ -1,12 +1,26 @@
 package utils
 
 import (
-  	"encoding/json"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"unicode"
-  	yaml "gopkg.in/yaml.v3"
+
+	yaml "gopkg.in/yaml.v3"
 )
 
-/ IsJSON try to guess if file is json or yaml
+// GetEnv returns an env variable value or a default
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+// IsJSON try to guess if file is json or yaml
 func IsJSON(buf []byte) bool {
 	trim := bytes.TrimLeftFunc(buf, unicode.IsSpace)
 	if bytes.HasPrefix(trim, []byte("{")) {
@@ -57,7 +71,7 @@ func yaml2json(raw []byte, noindent bool) ([]byte, error) {
 // Convert yaml to json or json to yaml
 func Convert(raw []byte, noindent bool) ([]byte, error) {
 	isjson := IsJSON(raw)
-	if isjson != true {
+	if !isjson {
 		output, err := yaml2json(raw, noindent)
 		if err != nil {
 			fmt.Printf("decode data: %v", err)
@@ -71,4 +85,30 @@ func Convert(raw []byte, noindent bool) ([]byte, error) {
 		return nil, err
 	}
 	return output, nil
+}
+
+// DownloadFile downloads a binary from an http location
+func DownloadFile(filepath string, url string) (err error) {
+	f, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	_, err = io.Copy(f, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

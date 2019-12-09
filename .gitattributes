@@ -1,0 +1,17 @@
+# DOS line endings
+*.bat text eol=crlf
+
+# Unix line endings
+*.sh       text eol=lf
+gradlew    text eol=lf
+*.go       text eol=lf
+*.json     text eol=lf
+
+*.md text
+*.txt text
+
+*.gif binary
+*.jar binary
+*.png binary
+
+

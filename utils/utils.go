@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"unicode"
 
 	yaml "gopkg.in/yaml.v3"
@@ -88,7 +89,7 @@ func Convert(raw []byte, noindent bool) ([]byte, error) {
 }
 
 // DownloadFile downloads a binary from an http location
-func DownloadFile(filepath string, url string) (err error) {
+func DownloadFile(filepath string, url string) error {
 	f, err := os.Create(filepath)
 	if err != nil {
 		return err
@@ -111,4 +112,15 @@ func DownloadFile(filepath string, url string) (err error) {
 	}
 
 	return nil
+}
+
+func FindFile(dirpath string, filename string) ([]string, error) {
+	filelist := []string{}
+	err := filepath.Walk(dirpath, func(path string, f os.FileInfo, err error) error {
+		if f.Name() == filename {
+			filelist = append(filelist, path)
+		}
+		return nil
+	})
+	return filelist, err
 }

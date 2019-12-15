@@ -52,9 +52,11 @@ func init() {
 	pkgCmd := pkg.NewPkgCmd()
 	pkgCreate := pkg.NewCreateCmd()
 	pkgBuild := pkg.NewBuildCmd()
+	pkgFetch := pkg.NewFetchCmd()
 
 	pkgCmd.AddCommand(pkgCreate)
 	pkgCmd.AddCommand(pkgBuild)
+	pkgCmd.AddCommand(pkgFetch)
 
 	//Add commands to root
 	RootCmd.AddCommand(pkgCmd)

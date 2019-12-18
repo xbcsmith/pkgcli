@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"testing"
 
 	yaml "gopkg.in/yaml.v3"
@@ -296,9 +297,18 @@ func TestReplacer(t *testing.T) {
 
 func TestFindFile(t *testing.T) {
 	filename := "sharutils.yml"
-	filepath := "tests/pkg/"
-	expected := []string{"tests/pkg/sharutils.yml"}
-	paths, err := FindFile(filepath, filename)
+	filepath := "../tests/pkg/"
+	expected := "sharutils.yml"
+	files, err := FindFile(filepath, filename)
 	assert.Assert(t, is.Nil(err))
-	assert.Equal(t, paths, expected, "Expected text failed")
+	assert.Equal(t, path.Base(files[0]), expected, "Expected text failed")
+}
+
+func TestFindArtifacts(t *testing.T) {
+	dir := "../tests/pkg"
+	suffix := ".yml"
+	expected := "sharutils.yml"
+	artifacts, err := FindArtifacts(dir, suffix)
+	assert.Assert(t, is.Nil(err))
+	assert.Equal(t, path.Base(artifacts[0]), expected, "Expected paths failed")
 }

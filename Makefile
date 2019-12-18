@@ -174,7 +174,7 @@ test: ; $(info $(M) running tests…) @
 
 .PHONY: clean
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
-	@rm -rf bin tools vendor
+	@rm -rf bin tools vendor src
 	@rm -rf tests/tests.* tests/coverage.*
 	@rm -rf cmd/version.bak.*
 

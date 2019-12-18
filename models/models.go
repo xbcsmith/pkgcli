@@ -42,9 +42,9 @@ type Instructions struct {
 // Source struct for source
 type Source struct {
 	Archive     string `json:"archive" yaml:"archive"`
-	Destination string `json:"destination" yaml:"destination"`
-	SHA256      string `json:"sha256" yaml:"sha256"`
-	MD5         string `json:"md5" yaml:"md5"`
+	Destination string `json:"destination,omitempty" yaml:"destination,omitempty"`
+	SHA256      string `json:"sha256,omitempty" yaml:"sha256,omitempty"`
+	MD5         string `json:"md5,omitempty" yaml:"md5,omitempty"`
 }
 
 // Sources struct for sources
@@ -54,10 +54,10 @@ type Sources []struct {
 
 // File struct for file
 type File struct {
-	Path   string `json:"path" yaml:"path"`
-	Name   string `json:"name" yaml:"name"`
-	Mode   string `json:"mode" yaml:"mode"`
-	SHA256 string `json:"sha256" yaml:"sha256"`
+	Path   string `json:"path,omitempty" yaml:"path,omitempty"`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
+	Mode   string `json:"mode,omitempty" yaml:"mode,omitempty"`
+	SHA256 string `json:"sha256,omitempty" yaml:"sha256,omitempty"`
 }
 
 // Files struct for files

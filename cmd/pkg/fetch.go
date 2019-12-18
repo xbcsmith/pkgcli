@@ -64,6 +64,12 @@ var fetchCmd = &cobra.Command{
 				if len(pkg.Release) == 0 {
 					pkg.Release = models.NewRelease()
 				}
+				fmt.Printf("Name : %s\n", pkg.Name)
+				fmt.Printf("Version : %s\n", pkg.Version)
+				fmt.Printf("Release : %s\n", pkg.Release)
+				if err := os.MkdirAll(sourcedir, 0755); err != nil {
+					return err
+				}
 				var filelist []string
 				if !force {
 					for _, src := range pkg.Sources {
@@ -85,6 +91,7 @@ var fetchCmd = &cobra.Command{
 						}
 					}
 				} else {
+					fmt.Printf("Downloading to %s\n", sourcedir)
 					filelist, err = pkg.FetchSources(sourcedir)
 					if err != nil {
 						return err

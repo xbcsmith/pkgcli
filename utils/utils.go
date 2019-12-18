@@ -127,16 +127,56 @@ func DownloadFile(filepath string, url string) error {
 	return nil
 }
 
-// FindFile func takes dirpath string, filename string input and returns []string, error
-func FindFile(dirpath string, filename string) ([]string, error) {
-	filelist := []string{}
-	err := filepath.Walk(dirpath, func(path string, f os.FileInfo, err error) error {
-		if f.Name() == filename {
-			filelist = append(filelist, path)
-		}
-		return nil
-	})
-	return filelist, err
+// FindFile finds a file in a given directory
+func FindFile(dirpath, filename string) ([]string, error) {
+	var files []string
+	abspath, err := filepath.Abs(dirpath)
+	if err != nil {
+		return files, err
+	}
+	err = filepath.Walk(abspath,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Mode().IsDir() {
+				return nil
+			}
+			if filepath.Base(path) == filename {
+				files = append(files, path)
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+	return files, err
+}
+
+// FindArtifacts finds artifacts in a given directory
+func FindArtifacts(dirpath, suffix string) ([]string, error) {
+	var files []string
+	abspath, err := filepath.Abs(dirpath)
+	if err != nil {
+		return files, err
+	}
+	err = filepath.Walk(abspath,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Mode().IsDir() {
+				return nil
+			}
+			if strings.HasSuffix(path, suffix) {
+				files = append(files, path)
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+	return files, err
 }
 
 // GetEnvsByPrefix finds all ENV vars that start with prefix

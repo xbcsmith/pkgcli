@@ -63,8 +63,10 @@ func (p *Pkg) FetchSources(destdir string) ([]string, error) {
 		return nil, err
 	}
 	for _, src := range p.Sources {
+		fmt.Printf("Archive : %s\n", src.Archive)
 		filename := path.Base(src.Archive)
 		filepath := path.Join(destdir, filename)
+		fmt.Printf("FilePath : %s\n", filepath)
 		err := utils.DownloadFile(filepath, src.Archive)
 		if err != nil {
 			return nil, err

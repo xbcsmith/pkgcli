@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -127,10 +128,60 @@ func DownloadFile(filepath string, url string) error {
 	return nil
 }
 
+// for sorting by length
+type byLength []string
+
+func (s byLength) Len() int {
+	return len(s)
+}
+func (s byLength) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s byLength) Less(i, j int) bool {
+	return len(s[i]) < len(s[j])
+}
+
+// splitPath returns []string path
+func splitPath(path string) []string {
+	path = strings.TrimPrefix(path, "/")
+	if path == "" {
+		return nil
+	}
+	return strings.Split(path, "/")
+}
+
 // FindFile finds a file in a given directory
-func FindFile(dirpath, filename string) ([]string, error) {
+func FindDir(base, dirname string, depth int) ([]string, error) {
+	var dirs []string
+	err := filepath.Walk(base,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Mode().IsDir() {
+				relpath, err := filepath.Rel(base, path)
+				if err != nil {
+					return err
+				}
+				if len(splitPath(relpath)) < depth {
+					if filepath.Base(path) == dirname {
+						dirs = append(dirs, path)
+					}
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+	sort.Sort(byLength(dirs))
+	return dirs, err
+}
+
+// FindFile finds a file in a given directory
+func FindFile(base, filename string) ([]string, error) {
 	var files []string
-	abspath, err := filepath.Abs(dirpath)
+	abspath, err := filepath.Abs(base)
 	if err != nil {
 		return files, err
 	}

@@ -295,6 +295,15 @@ func TestReplacer(t *testing.T) {
 	assert.Equal(t, new, expected, "Expected text failed")
 }
 
+func TestFindDir(t *testing.T) {
+	dirname := "pkg"
+	basepath := "../tests/"
+	expected := "pkg"
+	dirs, err := FindDir(basepath, dirname, 2)
+	assert.Assert(t, is.Nil(err))
+	assert.Equal(t, path.Base(dirs[0]), expected, "Expected text failed")
+}
+
 func TestFindFile(t *testing.T) {
 	filename := "sharutils.yml"
 	filepath := "../tests/pkg/"

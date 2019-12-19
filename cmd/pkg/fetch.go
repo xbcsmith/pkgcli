@@ -74,7 +74,12 @@ var fetchCmd = &cobra.Command{
 				if !force {
 					for _, src := range pkg.Sources {
 						filelist, err = utils.FindFile(sourcedir, path.Base(src.Archive))
+						if err != nil {
+							fmt.Println(err)
+							os.Exit(-1)
+						}
 						for _, filepath := range filelist {
+							fmt.Printf("File %s already exists\n", filepath)
 							raw, err := ioutil.ReadFile(filepath)
 							if err != nil {
 								fmt.Println(err)
@@ -97,6 +102,7 @@ var fetchCmd = &cobra.Command{
 						return err
 					}
 				}
+				fmt.Println("Fetch complete")
 				for _, file := range filelist {
 					fmt.Printf("%s\n", file)
 				}

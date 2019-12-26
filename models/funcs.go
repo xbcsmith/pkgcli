@@ -11,19 +11,39 @@ import (
 	"os"
 	"path"
 	"strings"
+	"text/template"
 	"time"
 
 	"crypto/md5"
+	"crypto/rand"
 	"crypto/sha256"
 
+	"github.com/fatih/structs"
+	"github.com/oklog/ulid"
 	"github.com/xbcsmith/pkgcli/utils"
 	yaml "gopkg.in/yaml.v3"
 )
 
+// NewULID returns a ULID.
+func NewULID() (ulid.ULID, error) {
+	id, err := ulid.New(ulid.Timestamp(time.Now()), rand.Reader)
+	if err != nil {
+		return id, fmt.Errorf("NewULID Failed: %s", err)
+	}
+	return id, err
+}
+
+// NewULIDAsString returns a ULID string.
+func NewULIDAsString() string {
+	id, _ := ulid.New(ulid.Timestamp(time.Now()), rand.Reader)
+	return id.String()
+}
+
 // NewRelease func takes no input and returns a string
 func NewRelease() string {
-	t := time.Now()
-	return t.Format("20060102.1573068157933")
+	// t := time.Now()
+	// return t.Format("20060102.1573068157933")
+	return NewULIDAsString()
 }
 
 // NewPkg func takes name and version as input and returns *Pkg
@@ -118,6 +138,53 @@ func (p *Pkg) ToPrettyJSON() ([]byte, error) {
 		return nil, fmt.Errorf("failed to convert to json : %v", err)
 	}
 	return content, nil
+}
+
+// maketmpl helper function
+func maketmpl(data map[string]interface{}, tmpl string) (string, error) {
+	builder := &strings.Builder{}
+	t := template.Must(template.New("new").Parse(tmpl))
+	if err := t.Execute(builder, data); err != nil {
+		return ``, err
+	}
+	s := builder.String()
+	return s, nil
+}
+
+// ToBuildScript func takes no input and returns []byte, error
+func (p *Pkg) ToBuildScript() (string, error) {
+	template := `#!/bin/bash
+set -x
+umask 022
+LANG=C
+LC_ALL=POSIX
+PATH=/tools/bin:/bin:/usr/bin
+export LANG LC_ALL PATH
+PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:/usr/lib64/pkgconfig:/usr/share/pkgconfig"
+export PKG_CONFIG_PATH
+BUILDDIR=/build
+SRCDIR=/src
+DESTDIR=/install
+PKGDIR=/package
+export BUILDDIR SRCDIR DESTDIR PKGDIR
+mkdir -vp {$BUILDDIR,$SRCDIR,$DESTDIR,$PKGDIR}
+{{ range .Instructions}}
+{{.Unpack}}
+{{.Pre}}
+{{.Configure}}
+{{.Build}}
+{{.Test}}
+{{.Install}}
+{{.Post}}
+{{end}}
+`
+	data := structs.Map(p)
+	script, err := maketmpl(data, template)
+	if err != nil {
+		return script, err
+	}
+	return script, nil
+
 }
 
 // ToYAML func takes no input and returns []byte, error

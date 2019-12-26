@@ -63,6 +63,11 @@ var buildCmd = &cobra.Command{
 					pkg.Release = models.NewRelease()
 				}
 				fmt.Printf("NVRA : %s\n", pkg.GetNVRA())
+				// Make Build Directory
+				// Create Build Script
+				// Run Build script
+				// Compress Results
+
 			}
 
 		}

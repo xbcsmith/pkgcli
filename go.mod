@@ -4,12 +4,14 @@ go 1.13
 
 require (
 	github.com/cosiner/argv v0.0.1 // indirect
+	github.com/fatih/structs v1.1.0
 	github.com/go-delve/delve v1.3.2 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
+	github.com/oklog/ulid v1.3.1
 	github.com/peterh/liner v1.1.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/spf13/cobra v0.0.5

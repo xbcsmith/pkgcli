@@ -13,7 +13,10 @@ type Pkg struct {
 	Provides     []string      `json:"provides" yaml:"provides"`
 	Release      string        `json:"release" yaml:"release"`
 	Requires     []string      `json:"requires" yaml:"requires"`
+	Optional     []string      `json:"optional,omitempty" yaml:"optional,omitempty"`
+	Recommended  []string      `json:"recommended,omitempty" yaml:"recommended,omitempty"`
 	Sources      []Source      `json:"sources" yaml:"sources"`
+	Files        []File        `json:"files" yaml:"files"`
 	Summary      string        `json:"summary" yaml:"summary"`
 	Version      string        `json:"version" yaml:"version"`
 }
@@ -26,11 +29,11 @@ type Pkgs struct {
 // Instruction struct for instruction
 type Instruction struct {
 	Build     string `json:"build" yaml:"build"`
-	Configure string `json:"configure" yaml:"configure"`
+	Configure string `json:"configure,omitempty" yaml:"configure,omitempty"`
 	Install   string `json:"install" yaml:"install"`
-	Post      string `json:"post" yaml:"post"`
-	Pre       string `json:"pre" yaml:"pre"`
-	Test      string `json:"test" yaml:"test"`
+	Post      string `json:"post,omitempty" yaml:"post,omitempty"`
+	Pre       string `json:"pre,omitempty" yaml:"pre,omitempty"`
+	Test      string `json:"test,omitempty" yaml:"test,omitempty"`
 	Unpack    string `json:"unpack" yaml:"unpack"`
 }
 
@@ -45,6 +48,8 @@ type Source struct {
 	Destination string `json:"destination,omitempty" yaml:"destination,omitempty"`
 	SHA256      string `json:"sha256,omitempty" yaml:"sha256,omitempty"`
 	MD5         string `json:"md5,omitempty" yaml:"md5,omitempty"`
+	OnDisk      string `json:"ondisk,omitempty" yaml:"ondisk,omitempty"`
+	Size        string `json:"size,omitempty" yaml:"size,omitempty"`
 }
 
 // Sources struct for sources

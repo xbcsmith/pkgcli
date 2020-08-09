@@ -46,7 +46,22 @@ var buildCmd = &cobra.Command{
 					fmt.Println(err)
 					os.Exit(-1)
 				}
-				pkg := &models.Pkg{}
+				pkg := &models.Pkg{
+					Description:  "",
+					Instructions: []models.Instruction{},
+					Name:         "",
+					Package:      "",
+					PlatformID:   "",
+					Provides:     []string{},
+					Release:      "",
+					Requires:     []string{},
+					Optional:     []string{},
+					Recommended:  []string{},
+					Sources:      []models.Source{},
+					Files:        []models.File{},
+					Summary:      "",
+					Version:      "",
+				}
 				isjson := utils.IsJSON(content)
 				if !isjson {
 					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))

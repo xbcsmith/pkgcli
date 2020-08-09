@@ -77,7 +77,6 @@ func TestDecodePkgFromJSON(t *testing.T) {
 	pkg, err := DecodePkgFromJSON(strings.NewReader(content))
 	assert.Assert(t, is.Nil(err))
 	assert.Equal(t, pkg.Name, "sharutils")
-
 }
 
 // TestNewPkg func takes no input and returns t *testing.T

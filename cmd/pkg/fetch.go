@@ -5,7 +5,7 @@ package pkg
 
 import (
 	"bytes"
-	"crypto/md5"
+	"crypto/md5" // nolint:gosec
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
@@ -48,7 +48,22 @@ var fetchCmd = &cobra.Command{
 					fmt.Println(err)
 					os.Exit(-1)
 				}
-				pkg := &models.Pkg{}
+				pkg := &models.Pkg{
+					Description:  "",
+					Instructions: []models.Instruction{},
+					Name:         "",
+					Package:      "",
+					PlatformID:   "",
+					Provides:     []string{},
+					Release:      "",
+					Requires:     []string{},
+					Optional:     []string{},
+					Recommended:  []string{},
+					Sources:      []models.Source{},
+					Files:        []models.File{},
+					Summary:      "",
+					Version:      "",
+				}
 				isjson := utils.IsJSON(content)
 				if !isjson {
 					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))
@@ -85,7 +100,7 @@ var fetchCmd = &cobra.Command{
 								fmt.Println(err)
 								os.Exit(-1)
 							}
-							md5sum := fmt.Sprintf("%x", md5.Sum(raw))
+							md5sum := fmt.Sprintf("%x", md5.Sum(raw)) // nolint:gosec
 							if md5sum != src.MD5 {
 								fmt.Printf("%s : MD5 sums do not match %s != %s", src.Archive, src.MD5, md5sum)
 							}

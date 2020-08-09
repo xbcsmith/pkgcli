@@ -46,7 +46,7 @@ func IsJSON(buf []byte) bool {
 // json2yaml func takes raw []byte input and returns []byte, error
 func json2yaml(raw []byte) ([]byte, error) {
 	var output interface{}
-	if err := json.Unmarshal([]byte(raw), &output); err != nil {
+	if err := json.Unmarshal(raw, &output); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +78,6 @@ func yaml2json(raw []byte, noindent bool) ([]byte, error) {
 		return nil, fmt.Errorf("failed to convert to yaml : %v", err)
 	}
 	return content, nil
-
 }
 
 // Convert yaml to json or json to yaml
@@ -101,6 +100,11 @@ func Convert(raw []byte, noindent bool) ([]byte, error) {
 	return output, nil
 }
 
+// DownloadFiles downloads a map[string]string of files
+func DownloadFiles(filemap map[string]string) error {
+	return nil
+}
+
 // DownloadFile downloads a binary from an http location
 // DownloadFile func takes no input and returns filepath string, url string error
 func DownloadFile(filepath string, url string) error {
@@ -110,7 +114,7 @@ func DownloadFile(filepath string, url string) error {
 	}
 	defer f.Close()
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) // nolint:gosec
 	if err != nil {
 		return err
 	}
@@ -233,7 +237,7 @@ func FindArtifacts(dirpath, suffix string) ([]string, error) {
 // GetEnvsByPrefix finds all ENV vars that start with prefix
 // GetEnvsByPrefix func takes no input and returns prefix string, strip bool map[string]string
 func GetEnvsByPrefix(prefix string, strip bool) map[string]string {
-	envs := make(map[string]string)
+	envs := make(map[string]string, 0)
 	for _, e := range os.Environ() {
 		pair := strings.Split(e, "=")
 		if strings.HasPrefix(pair[0], prefix) {
@@ -270,7 +274,6 @@ func DeepEqualStringArray(first []string, second []string) bool {
 		if !StringInSlice(v, second) {
 			return false
 		}
-
 	}
 	return true
 }
@@ -281,8 +284,10 @@ func GetTokens(prefix string) *Tokens {
 	envs := GetEnvsByPrefix(prefix, true)
 	if len(envs) > 0 {
 		for k, v := range envs {
-			key := "@" + k + "@"
-			tokens[key] = v
+			if k != "" {
+				key := "@" + k + "@"
+				tokens[key] = v
+			}
 		}
 	}
 	return &Tokens{
@@ -297,7 +302,7 @@ type Tokens struct {
 
 // Keys func takes no input and returns []string
 func (t *Tokens) Keys() []string {
-	var keys []string
+	keys := make([]string, len(t.Tokens))
 	for k := range t.Tokens {
 		keys = append(keys, k)
 	}
@@ -325,11 +330,10 @@ func Replacer(tokens *Tokens, text string) string {
 
 // Compress func takes no input and returns src string, excludes []string, writers ...io.Writer error
 func Compress(src string, excludes []string, writers ...io.Writer) error {
-
 	fmt.Printf("Creating tar xz : %s\n", src)
 
 	if _, err := os.Stat(src); err != nil {
-		return fmt.Errorf("Unable to tar files - %v", err.Error())
+		return fmt.Errorf("unable to tar files - %v", err.Error())
 	}
 
 	mw := io.MultiWriter(writers...)
@@ -344,7 +348,6 @@ func Compress(src string, excludes []string, writers ...io.Writer) error {
 	defer tw.Close()
 
 	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
-
 		if err != nil {
 			return err
 		}

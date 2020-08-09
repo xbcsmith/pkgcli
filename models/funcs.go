@@ -14,7 +14,7 @@ import (
 	"text/template"
 	"time"
 
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"crypto/rand"
 	"crypto/sha256"
 
@@ -77,7 +77,7 @@ func (p *Pkg) GetNVRA() string {
 
 // FetchSources fetches the sources from a pkg
 func (p *Pkg) FetchSources(destdir string) ([]string, error) {
-	var filelist []string
+	filelist := make([]string, len(p.Sources))
 	err := os.MkdirAll(destdir, 0755)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (p *Pkg) FetchSources(destdir string) ([]string, error) {
 			fmt.Println(err)
 			os.Exit(-1)
 		}
-		md5sum := fmt.Sprintf("%x", md5.Sum(raw))
+		md5sum := fmt.Sprintf("%x", md5.Sum(raw)) // nolint:gosec
 		if src.MD5 != "" {
 			if md5sum != src.MD5 {
 				return nil, fmt.Errorf("%s : MD5 sums do not match %s != %s", src.Archive, src.MD5, md5sum)
@@ -184,7 +184,6 @@ mkdir -vp {$BUILDDIR,$SRCDIR,$DESTDIR,$PKGDIR}
 		return script, err
 	}
 	return script, nil
-
 }
 
 // ToYAML func takes no input and returns []byte, error

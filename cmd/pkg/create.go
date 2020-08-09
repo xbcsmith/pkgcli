@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"crypto/md5"
+	"crypto/md5" // nolint:gosec
 	"crypto/sha256"
 
 	"github.com/spf13/cobra"
@@ -73,7 +73,7 @@ var createCmd = &cobra.Command{
 					fmt.Println(err)
 					os.Exit(-1)
 				}
-				md5sum := md5.Sum(raw)
+				md5sum := md5.Sum(raw) // nolint:gosec
 				sha256sum := sha256.Sum256(raw)
 				src := &models.Source{
 					Archive: filepath,

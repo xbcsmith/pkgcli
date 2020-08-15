@@ -114,7 +114,7 @@ instructions:
   configure: "./configure --prefix=/usr"
   build: "make"
   test: "make check"
-  install: "make install DESTDIR=$DESTDIR"
+  install: "make install"
   post: ""
 sources:
 - archives: http://ftp.gnu.org/gnu/sharutils/sharutils-4.15.2.tar.xz

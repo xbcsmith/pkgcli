@@ -237,7 +237,7 @@ func FindArtifacts(dirpath, suffix string) ([]string, error) {
 // GetEnvsByPrefix finds all ENV vars that start with prefix
 // GetEnvsByPrefix func takes no input and returns prefix string, strip bool map[string]string
 func GetEnvsByPrefix(prefix string, strip bool) map[string]string {
-	envs := make(map[string]string, 0)
+	envs := make(map[string]string)
 	for _, e := range os.Environ() {
 		pair := strings.Split(e, "=")
 		if strings.HasPrefix(pair[0], prefix) {

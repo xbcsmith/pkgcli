@@ -41,7 +41,7 @@ var createCmd = &cobra.Command{
 		description := viper.GetString("description")
 		summary := viper.GetString("summary")
 		pkgType := viper.GetString("package")
-		platformID := viper.GetString("platform_id")
+		platform := viper.GetString("platform")
 		provides := viper.GetStringSlice("provides")
 		requires := viper.GetStringSlice("requires")
 
@@ -60,8 +60,8 @@ var createCmd = &cobra.Command{
 		if pkgType != "" {
 			pkg.Package = pkgType
 		}
-		if platformID != "" {
-			pkg.PlatformID = platformID
+		if platform != "" {
+			pkg.Platform = platform
 		}
 		pkg.Provides = provides
 		pkg.Requires = requires
@@ -115,7 +115,7 @@ func NewCreateCmd() *cobra.Command {
 	createCmd.Flags().String("summary", "", "Summary of the pkg to create")
 
 	createCmd.Flags().String("package", "", "Package Type of the pkg to create (tar.xz, tar.gz, tgz)")
-	createCmd.Flags().String("platform_id", "", "Platform ID of the pkg to create (x86_64-gnu-linux-9)")
+	createCmd.Flags().String("platform", "", "Platform of the pkg to create (x86_64-gnu-linux-9)")
 	createCmd.Flags().String("requires", "", "Requires of the pkg to create (bar, caz)")
 	createCmd.Flags().String("provides", "", "Provides of the pkg to create (libfoo.so.1)")
 

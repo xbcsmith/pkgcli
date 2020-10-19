@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"gotest.tools/assert"
-	is "gotest.tools/assert/cmp"
+	"gotest.tools/v3/assert"
+	is "gotest.tools/v3/assert/cmp"
 )
 
 // TestDecodePkgFromYAML func takes no input and returns t *testing.T
@@ -34,14 +34,14 @@ sources:
   md5: 5975ce21da36491d7aa6dc2b0d9788e0
   sha256: 2b05cff7de5d7b646dc1669bc36c35fdac02ac6ae4b6c19cb3340d87ec553a9a
   destination: /usr
-platform_id: x86_64-lfs-linux-9
+platform: x86_64-lfs-linux-9
 package: tar.xz
 `
 
 	pkg, err := DecodePkgFromYAML(strings.NewReader(content))
 	assert.Assert(t, is.Nil(err))
 	assert.Equal(t, pkg.Name, "sharutils")
-	arch := strings.Split(pkg.PlatformID, "-")[0]
+	arch := strings.Split(pkg.Platform, "-")[0]
 	assert.Equal(t, arch, "x86_64")
 }
 

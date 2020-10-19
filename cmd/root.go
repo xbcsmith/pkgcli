@@ -58,7 +58,6 @@ func init() {
 	pkgCmd.AddCommand(pkgBuild)
 	pkgCmd.AddCommand(pkgFetch)
 
-	//Add commands to root
+	// Add commands to root
 	RootCmd.AddCommand(pkgCmd)
-
 }

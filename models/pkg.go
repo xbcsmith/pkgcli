@@ -4,6 +4,8 @@
 package models
 
 import (
+	"crypto/md5" // nolint:gosec
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,39 +13,34 @@ import (
 	"os"
 	"path"
 	"strings"
-	"text/template"
-	"time"
-
-	"crypto/md5" //nolint:gosec
-	"crypto/rand"
-	"crypto/sha256"
 
 	"github.com/fatih/structs"
-	"github.com/oklog/ulid"
-	"github.com/xbcsmith/pkgcli/utils"
+
 	yaml "gopkg.in/yaml.v3"
 )
 
-// NewULID returns a ULID.
-func NewULID() (ulid.ULID, error) {
-	id, err := ulid.New(ulid.Timestamp(time.Now()), rand.Reader)
-	if err != nil {
-		return id, fmt.Errorf("NewULID Failed: %s", err)
-	}
-	return id, err
+// Pkg struct for pkg
+type Pkg struct {
+	Description  string        `json:"description" yaml:"description"`
+	Instructions []Instruction `json:"instructions" yaml:"instructions"`
+	Name         string        `json:"name" yaml:"name"`
+	Version      string        `json:"version" yaml:"version"`
+	Package      string        `json:"package" yaml:"package"`
+	Arch         string        `json:"arch" yaml:"arch"`
+	Platform     string        `json:"platform" yaml:"platform"`
+	Summary      string        `json:"summary" yaml:"summary"`
+	Release      string        `json:"release" yaml:"release"`
+	Provides     []string      `json:"provides" yaml:"provides"`
+	Requires     []string      `json:"requires" yaml:"requires"`
+	Optional     []string      `json:"optional,omitempty" yaml:"optional,omitempty"`
+	Recommended  []string      `json:"recommended,omitempty" yaml:"recommended,omitempty"`
+	Sources      []Source      `json:"sources" yaml:"sources"`
+	Files        []File        `json:"files" yaml:"files"`
 }
 
-// NewULIDAsString returns a ULID string.
-func NewULIDAsString() string {
-	id, _ := ulid.New(ulid.Timestamp(time.Now()), rand.Reader)
-	return id.String()
-}
-
-// NewRelease func takes no input and returns a string
-func NewRelease() string {
-	// t := time.Now()
-	// return t.Format("20060102.1573068157933")
-	return NewULIDAsString()
+// Pkgs struct for pkgs
+type Pkgs struct {
+	Packages []Pkg `json:"packages" yaml:"packages"`
 }
 
 // NewPkg func takes name and version as input and returns *Pkg
@@ -57,7 +54,7 @@ func NewPkg(name, version string) *Pkg {
 		Description: description,
 		Summary:     description,
 		Package:     "tar.xz",
-		PlatformID:  "x86_64-gnu-linux-9",
+		Platform:    "x86_64-gnu-linux-9",
 	}
 }
 
@@ -69,15 +66,15 @@ func (p *Pkg) GetNVRA() string {
 	if len(p.Release) > 0 {
 		release = p.Release
 	}
-	if len(strings.Split(p.PlatformID, "-")) > 0 {
-		arch = strings.Split(p.PlatformID, "-")[0]
+	if len(strings.Split(p.Platform, "-")) > 0 {
+		arch = strings.Split(p.Platform, "-")[0]
 	}
 	return p.Name + "-" + p.Version + "-" + release + "." + arch
 }
 
 // FetchSources fetches the sources from a pkg
-func (p *Pkg) FetchSources(destdir string) ([]string, error) {
-	filelist := make([]string, len(p.Sources))
+func (p *Pkg) FetchSources(destdir string, force bool) ([]string, error) {
+	filelist := make([]string, 0)
 	err := os.MkdirAll(destdir, 0755)
 	if err != nil {
 		return nil, err
@@ -87,10 +84,16 @@ func (p *Pkg) FetchSources(destdir string) ([]string, error) {
 		filename := path.Base(src.Archive)
 		filepath := path.Join(destdir, filename)
 		fmt.Printf("FilePath : %s\n", filepath)
-		err := utils.DownloadFile(filepath, src.Archive)
-		if err != nil {
-			return nil, err
+		if force || !isFile(filepath) {
+			if isDir(filepath) {
+				return nil, err
+			}
+			err := DownloadFile(filepath, src.Archive)
+			if err != nil {
+				return nil, err
+			}
 		}
+
 		raw, err := ioutil.ReadFile(filepath)
 		if err != nil {
 			fmt.Println(err)
@@ -109,6 +112,14 @@ func (p *Pkg) FetchSources(destdir string) ([]string, error) {
 			}
 		}
 		filelist = append(filelist, sha256sum+" "+filepath)
+		f := File{
+			Path:   filepath,
+			Name:   filename,
+			Mode:   "0644", // TODO: get actual mode
+			SHA256: sha256sum,
+			MD5:    md5sum,
+		}
+		p.Files = append(p.Files, f)
 	}
 	return filelist, nil
 }
@@ -138,17 +149,6 @@ func (p *Pkg) ToPrettyJSON() ([]byte, error) {
 		return nil, fmt.Errorf("failed to convert to json : %v", err)
 	}
 	return content, nil
-}
-
-// maketmpl helper function
-func maketmpl(data map[string]interface{}, tmpl string) (string, error) {
-	builder := &strings.Builder{}
-	t := template.Must(template.New("new").Parse(tmpl))
-	if err := t.Execute(builder, data); err != nil {
-		return ``, err
-	}
-	s := builder.String()
-	return s, nil
 }
 
 // ToBuildScript func takes no input and returns []byte, error
@@ -204,42 +204,6 @@ func (p *Pkgs) ToJSON() ([]byte, error) {
 	return content, nil
 }
 
-// ToYAML func takes no input and returns []byte, error
-func (i *Instructions) ToYAML() ([]byte, error) {
-	content, err := yaml.Marshal(i)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert to yaml : %v", err)
-	}
-	return content, nil
-}
-
-// ToJSON func takes no input and returns []byte, error
-func (i *Instructions) ToJSON() ([]byte, error) {
-	content, err := json.Marshal(i)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert to json : %v", err)
-	}
-	return content, nil
-}
-
-// ToYAML func takes no input and returns []byte, error
-func (s *Sources) ToYAML() ([]byte, error) {
-	content, err := yaml.Marshal(s)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert to yaml : %v", err)
-	}
-	return content, nil
-}
-
-// ToJSON func takes no input and returns []byte, error
-func (s *Sources) ToJSON() ([]byte, error) {
-	content, err := json.Marshal(s)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert to json : %v", err)
-	}
-	return content, nil
-}
-
 // DecodePkgFromJSON func takes reader io.Reader as input and returns *Pkg, error
 func DecodePkgFromJSON(reader io.Reader) (*Pkg, error) {
 	pkg := &Pkg{}
@@ -258,4 +222,19 @@ func DecodePkgFromYAML(reader io.Reader) (*Pkg, error) {
 		return nil, fmt.Errorf("error decoding yaml : %v", err)
 	}
 	return pkg, nil
+}
+
+// Build attempts to build the package
+// Make Build Directory
+// Create Build Script
+// Run Build script
+// Compress Results
+func (p *Pkg) Build(builddir string) (string, error) {
+	var output string
+	err := os.MkdirAll(builddir, 0755)
+	if err != nil {
+		return output, err
+	}
+
+	return output, nil
 }

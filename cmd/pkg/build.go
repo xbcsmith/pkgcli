@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xbcsmith/pkgcli/models"
-	"github.com/xbcsmith/pkgcli/utils"
 )
 
 // buildCmd represents the build command
@@ -34,10 +33,10 @@ var buildCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		buildroot := viper.GetString("buildroot")
 		sourcedir := viper.GetString("sourcedir")
-		fetch := viper.GetBool("fetch")
+		force := viper.GetBool("force-download")
 		fmt.Printf("BUILDROOT : %s\nSOURCEDIR : %s\n", buildroot, sourcedir)
-		if fetch {
-			fmt.Println("Fetch Enabled")
+		if force {
+			fmt.Println("Force Enabled")
 		}
 		if len(args) > 0 {
 			for _, filepath := range args {
@@ -51,7 +50,7 @@ var buildCmd = &cobra.Command{
 					Instructions: []models.Instruction{},
 					Name:         "",
 					Package:      "",
-					PlatformID:   "",
+					Platform:     "",
 					Provides:     []string{},
 					Release:      "",
 					Requires:     []string{},
@@ -62,7 +61,7 @@ var buildCmd = &cobra.Command{
 					Summary:      "",
 					Version:      "",
 				}
-				isjson := utils.IsJSON(content)
+				isjson := models.IsJSON(content)
 				if !isjson {
 					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))
 					if err != nil {
@@ -78,11 +77,12 @@ var buildCmd = &cobra.Command{
 					pkg.Release = models.NewRelease()
 				}
 				fmt.Printf("NVRA : %s\n", pkg.GetNVRA())
-				// Make Build Directory
-				// Create Build Script
-				// Run Build script
-				// Compress Results
 
+				artifacts, err := pkg.FetchSources(sourcedir, force)
+				if err != nil {
+					return nil
+				}
+				fmt.Println(models.SHASlice(artifacts))
 			}
 
 		}

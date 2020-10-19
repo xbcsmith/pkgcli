@@ -4,19 +4,15 @@
 package pkg
 
 import (
-	"bytes"
-	"crypto/md5" // nolint:gosec
-	"crypto/sha256"
+	"bytes" // nolint:gosec
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xbcsmith/pkgcli/models"
-	"github.com/xbcsmith/pkgcli/utils"
 )
 
 // fetchCmd represents the fetch command
@@ -53,7 +49,7 @@ var fetchCmd = &cobra.Command{
 					Instructions: []models.Instruction{},
 					Name:         "",
 					Package:      "",
-					PlatformID:   "",
+					Platform:     "",
 					Provides:     []string{},
 					Release:      "",
 					Requires:     []string{},
@@ -64,7 +60,7 @@ var fetchCmd = &cobra.Command{
 					Summary:      "",
 					Version:      "",
 				}
-				isjson := utils.IsJSON(content)
+				isjson := models.IsJSON(content)
 				if !isjson {
 					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))
 					if err != nil {
@@ -86,37 +82,13 @@ var fetchCmd = &cobra.Command{
 					return err
 				}
 				var filelist []string
-				if !force {
-					for _, src := range pkg.Sources {
-						filelist, err = utils.FindFile(sourcedir, path.Base(src.Archive))
-						if err != nil {
-							fmt.Println(err)
-							os.Exit(-1)
-						}
-						for _, filepath := range filelist {
-							fmt.Printf("File %s already exists\n", filepath)
-							raw, err := ioutil.ReadFile(filepath)
-							if err != nil {
-								fmt.Println(err)
-								os.Exit(-1)
-							}
-							md5sum := fmt.Sprintf("%x", md5.Sum(raw)) // nolint:gosec
-							if md5sum != src.MD5 {
-								fmt.Printf("%s : MD5 sums do not match %s != %s", src.Archive, src.MD5, md5sum)
-							}
-							sha256sum := fmt.Sprintf("%x", sha256.Sum256(raw))
-							if sha256sum != src.SHA256 {
-								fmt.Printf("%s : SHA256 sums do not match %s != %s", src.Archive, src.SHA256, sha256sum)
-							}
-						}
-					}
-				} else {
-					fmt.Printf("Downloading to %s\n", sourcedir)
-					filelist, err = pkg.FetchSources(sourcedir)
-					if err != nil {
-						return err
-					}
+
+				fmt.Printf("Downloading to %s\n", sourcedir)
+				filelist, err = pkg.FetchSources(sourcedir, force)
+				if err != nil {
+					return err
 				}
+
 				fmt.Println("Fetch complete")
 				for _, file := range filelist {
 					fmt.Printf("%s\n", file)

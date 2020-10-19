@@ -4,6 +4,7 @@ COMMIT  ?= $(shell git rev-parse --short=16 HEAD)
 gitversion := $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
 			cat $(CURDIR)/.version 2> /dev/null || echo 0.1.0-0)
 VERSION ?= $(gitversion)
+PREFIX   = /usr/local
 
 TOOLS    = $(CURDIR)/tools
 PKGS     = $(or $(PKG),$(shell $(GO) list ./... | grep -v "^$(PACKAGE)/vendor/"))
@@ -27,7 +28,7 @@ TIMEOUT = 15
 
 V = 0
 Q = $(if $(filter 1,$V),,@)
-M = $(shell printf "\033[34;1m▶\033[0m")
+M = $(shell printf "\033[34;1mpkgcli ▶\033[0m")
 
 .PHONY: all
 all: static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin
@@ -36,19 +37,19 @@ all: static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-dar
 release: update-version static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin revert-version
 
 .PHONY: static-tests
-static-tests: fmt lint vet ## Run fmt lint and vet against all source
+static-tests: fmt lint imports vet ## Run fmt lint imports and vet against all source
 
 .PHONY: linux
-linux: static-tests test $(BINARY)
+linux: static-tests test $(BINARY) ## Build a linux amd64 binary
 
 .PHONY: linux-release
-linux-release: update-version static-tests test $(BINARY) revert-version
-
+linux-release: update-version static-tests test $(BINARY) revert-version ## Update the version.go file and build linux amd64 binary
 
 .PHONY: darwin
-darwin: static-tests test $(BINARY)-darwin
+darwin: static-tests test $(BINARY)-darwin ## Build a darwin binary
 
-
+.PHONY: arm64
+arm64: static-tests test $(BINARY)-arm64 ## Build a linux arm64 binary
 
 SOURCES = $(shell find -name vendor -prune -o -name \*.go -print)
 
@@ -67,11 +68,12 @@ $(BINARY)-darwin: $(SOURCES); $(info $(M) building darwin executable…) @ ## Bu
 
 
 # Tools
+
 GOIMPORTS = $(TOOLS)/goimports
 $(GOIMPORTS): ; $(info $(M) building goimports…)
 	$Q go build -o $@ golang.org/x/tools/cmd/goimports
 
-GOLINT = $(TOOLS)/golint 
+GOLINT = $(TOOLS)/golint
 $(GOLINT): ; $(info $(M) building golint…)
 	$Q go build -o $@ golang.org/x/lint/golint
 
@@ -152,6 +154,63 @@ update-version:
 revert-version:
 	$Q git checkout cmd/version.go
 
+.PHONY: install
+install: $(BINARY) ; $(info $(M) installing amd64 binary to $(DESTDIR)...) @ ## Install binary to $(DESTDIR)
+	$Q install -d -m 755 $(DESTDIR)$(PREFIX) && \
+			install -m 0755 ./bin/pkgcli $(DESTDIR)$(PREFIX)/bin/pkgcli
+
+.PHONY: install-arm64
+install-arm64: $(BINARY)-arm64 ; $(info $(M) installing arm64 binary to $(DESTDIR)...) @ ## Install arm64 binary to $(DESTDIR)
+	$Q install -d -m 755 $(DESTDIR)$(PREFIX) && \
+			install -m 0755 ./bin/pkgcli-arm64 $(DESTDIR)$(PREFIX)/bin/pkgcli
+
+.PHONY: install-darwin
+install-darwin: $(BINARY)-darwin ; $(info $(M) installing darwin binary to $(DESTDIR)...) @ ## Install darwin binary to $(DESTDIR)
+	$Q install -m 755 $(DESTDIR)$(PREFIX) && \
+			install -m 0755 ./bin/pkgcli-darwin $(DESTDIR)$(PREFIX)/bin/pkgcli
+
+.PHONY: megalint
+megalint: ; $(info $(M) running golangci-lint...) @ ## run golangci-lint
+	$Q golangci-lint run \
+		--fix \
+		--no-config \
+		--deadline=5m \
+		--timeout=30m \
+		--disable-all \
+		--enable=bodyclose \
+		--enable=deadcode \
+		--enable=depguard \
+		--enable=dogsled \
+		--enable=dupl \
+		--enable=errcheck \
+		--enable=gocognit \
+		--enable=goconst \
+		--enable=gocritic  \
+		--enable=gocyclo \
+		--enable=gofmt \
+		--enable=goimports \
+		--enable=golint \
+		--enable=goprintffuncname \
+		--enable=gosec \
+		--enable=gosimple \
+		--enable=govet \
+		--enable=ineffassign \
+		--enable=maligned \
+		--enable=megacheck \
+		--enable=misspell \
+		--enable=nakedret \
+		--enable=prealloc \
+		--enable=rowserrcheck \
+		--enable=staticcheck \
+		--enable=structcheck \
+		--enable=stylecheck \
+		--enable=typecheck \
+		--enable=unconvert \
+		--enable=unparam \
+		--enable=unused \
+		--enable=varcheck \
+		--enable=whitespace
+
 .PHONY: lint
 lint: $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint change ret=1 to make lint required
 	$Q ret=0 && for pkg in $(PKGS); do \
@@ -163,6 +222,10 @@ fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./... | grep -v /vendor/); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
+
+.PHONY: imports
+imports: $(GOIMPORTS) ; $(info $(M) running goimports...) @ ## Run goimports -w
+	$Q $(GOIMPORTS) -w .
 
 .PHONY: vet
 vet: ; $(info $(M) running go vet…) @ ## Run go vet on all source files
@@ -186,6 +249,3 @@ help:
 .PHONY: version
 version:
 	@echo $(VERSION)
-
-
-

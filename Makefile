@@ -31,25 +31,25 @@ Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1mpkgcli ▶\033[0m")
 
 .PHONY: all
-all: static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin
+all: static-tests testdata test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin
 
 .PHONY: release
-release: update-version static-tests test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin revert-version
+release: update-version static-tests testdata test $(BINARY) $(BINARY)-arm64 $(BINARY)-ppc64le $(BINARY)-darwin revert-version
 
 .PHONY: static-tests
 static-tests: fmt lint imports vet ## Run fmt lint imports and vet against all source
 
 .PHONY: linux
-linux: static-tests test $(BINARY) ## Build a linux amd64 binary
+linux: static-tests testdata test $(BINARY) ## Build a linux amd64 binary
 
 .PHONY: linux-release
-linux-release: update-version static-tests test $(BINARY) revert-version ## Update the version.go file and build linux amd64 binary
+linux-release: update-version static-tests testdata test $(BINARY) revert-version ## Update the version.go file and build linux amd64 binary
 
 .PHONY: darwin
-darwin: static-tests test $(BINARY)-darwin ## Build a darwin binary
+darwin: static-tests testdata test $(BINARY)-darwin ## Build a darwin binary
 
 .PHONY: arm64
-arm64: static-tests test $(BINARY)-arm64 ## Build a linux arm64 binary
+arm64: static-tests testdata test $(BINARY)-arm64 ## Build a linux arm64 binary
 
 SOURCES = $(shell find -name vendor -prune -o -name \*.go -print)
 
@@ -96,13 +96,12 @@ $(GO2XUNIT): ; $(info $(M) building go2xunit…)
 GOBINDATA = $(TOOLS)/go-bindata
 $(GOBINDATA): ; $(info $(M) building go-bindata…)
 	@mkdir -p $(TOOLS)
-	$Q go build -o $@ github.com/shuLhan/go-bindata/cmd/go-bindata
+	$Q go build -o $@ github.com/go-bindata/go-bindata/v3/go-bindata
 
 GOVERSIONINFO = $(TOOLS)/goversioninfo
 $(GOVERSIONINFO): ; $(info $(M) building goversioninfo…)
 	@mkdir -p $(TOOLS)
 	$Q go build -o $@ github.com/josephspurrier/goversioninfo/cmd/goversioninfo
-
 
 $(TOOLS)/protoc-gen-go: ; $(info $(M) building protoc-gen-go…)
 	@mkdir -p $(TOOLS)
@@ -153,6 +152,10 @@ update-version:
 .PHONY: revert-version
 revert-version:
 	$Q git checkout cmd/version.go
+
+.PHONY: testdata
+testdata: $(GOBINDATA) ; $(info $(M) generating testdata.go...) @ ## Generate templates with go-bindata
+	$Q make -C testdata/
 
 .PHONY: install
 install: $(BINARY) ; $(info $(M) installing amd64 binary to $(DESTDIR)...) @ ## Install binary to $(DESTDIR)

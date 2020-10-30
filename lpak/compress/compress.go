@@ -1,7 +1,7 @@
-// Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
+// Copyright © 2020 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package compress
 
 import (
 	"archive/tar"
@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/ulikunitz/xz"
+
+	"github.com/xbcsmith/pkgcli/lpak/common"
 )
 
 // Compress func takes no input and returns src string, excludes []string, writers ...io.Writer error
@@ -39,7 +41,7 @@ func Compress(src string, excludes []string, writers ...io.Writer) error {
 			return err
 		}
 
-		if StringInSlice(fi.Name(), excludes) {
+		if common.StringInSlice(fi.Name(), excludes) {
 			fmt.Printf("skipping file : %s\n", fi.Name())
 			return nil
 		}

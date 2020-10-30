@@ -1,7 +1,7 @@
-// Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
+// Copyright © 2020 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package source
 
 import (
 	"encoding/json"

@@ -7,12 +7,12 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xbcsmith/pkgcli/models"
+	"github.com/xbcsmith/pkgcli/lpak/common"
+	"github.com/xbcsmith/pkgcli/lpak/model"
 )
 
 // buildCmd represents the build command
@@ -42,47 +42,30 @@ var buildCmd = &cobra.Command{
 			for _, filepath := range args {
 				content, err := ioutil.ReadFile(filepath)
 				if err != nil {
-					fmt.Println(err)
-					os.Exit(-1)
+					return err
 				}
-				pkg := &models.Pkg{
-					Description:  "",
-					Instructions: []models.Instruction{},
-					Name:         "",
-					Package:      "",
-					Platform:     "",
-					Provides:     []string{},
-					Release:      "",
-					Requires:     []string{},
-					Optional:     []string{},
-					Recommended:  []string{},
-					Sources:      []models.Source{},
-					Files:        []models.File{},
-					Summary:      "",
-					Version:      "",
-				}
-				isjson := models.IsJSON(content)
-				if !isjson {
-					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))
+				var p = &model.Pkg{}
+				if !common.IsJSON(content) {
+					p, err = model.DecodePkgFromYAML(bytes.NewReader(content))
 					if err != nil {
 						return err
 					}
 				} else {
-					pkg, err = models.DecodePkgFromJSON(bytes.NewReader(content))
+					p, err = model.DecodePkgFromJSON(bytes.NewReader(content))
 					if err != nil {
 						return err
 					}
 				}
-				if len(pkg.Release) == 0 {
-					pkg.Release = models.NewRelease()
+				if len(p.Release) == 0 {
+					p.Release = common.NewRelease()
 				}
-				fmt.Printf("NVRA : %s\n", pkg.GetNVRA())
+				fmt.Printf("NVRA : %s\n", p.GetNVRA())
 
-				artifacts, err := pkg.FetchSources(sourcedir, force)
+				artifacts, err := p.FetchSources(sourcedir, force)
 				if err != nil {
 					return nil
 				}
-				fmt.Println(models.SHASlice(artifacts))
+				fmt.Println(common.SHASlice(artifacts))
 			}
 
 		}

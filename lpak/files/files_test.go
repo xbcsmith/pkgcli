@@ -1,7 +1,7 @@
-// Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
+// Copyright © 2020 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package files
 
 import (
 	"path"
@@ -15,7 +15,7 @@ const sharutilFileName string = "sharutils.yaml"
 
 func TestFindDir(t *testing.T) {
 	dirname := "pkg"
-	basepath := "../testdata/"
+	basepath := "../../testdata/"
 	expected := "pkg"
 	dirs, err := FindDir(basepath, dirname, 2)
 	assert.Assert(t, is.Nil(err))
@@ -24,7 +24,7 @@ func TestFindDir(t *testing.T) {
 
 func TestFindFile(t *testing.T) {
 	filename := sharutilFileName
-	filepath := "../testdata/pkg/"
+	filepath := "../../testdata/pkg/"
 	expected := sharutilFileName
 	files, err := FindFile(filepath, filename)
 	assert.Assert(t, is.Nil(err))
@@ -32,7 +32,7 @@ func TestFindFile(t *testing.T) {
 }
 
 func TestFindArtifacts(t *testing.T) {
-	dir := "../testdata/pkg"
+	dir := "../../testdata/pkg"
 	suffix := ".yaml"
 	expected := sharutilFileName
 	artifacts, err := FindArtifacts(dir, suffix)

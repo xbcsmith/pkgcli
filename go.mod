@@ -4,6 +4,8 @@ go 1.15
 
 require (
 	github.com/fatih/structs v1.1.0
+	github.com/go-bindata/go-bindata/v3 v3.1.3 // indirect
+	github.com/jinzhu/gorm v1.9.16
 	github.com/oklog/ulid v1.3.1
 	github.com/spf13/cobra v1.1.0
 	github.com/spf13/viper v1.7.1

@@ -15,7 +15,9 @@ import (
 	"crypto/sha256"
 
 	"github.com/spf13/cobra"
-	"github.com/xbcsmith/pkgcli/models"
+	"github.com/xbcsmith/pkgcli/lpak/instructions"
+	"github.com/xbcsmith/pkgcli/lpak/model"
+	"github.com/xbcsmith/pkgcli/lpak/source"
 )
 
 // createCmd represents the create command
@@ -24,7 +26,7 @@ var createCmd = &cobra.Command{
 	Short: "Creates an lfs pkg",
 	Long:  `Creates an lfs pkg yaml`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		viper.SetEnvPrefix("PACKAGE")
+		viper.SetEnvPrefix("package")
 		viper.AutomaticEnv()
 		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 		err := viper.BindPFlags(cmd.Flags())
@@ -45,26 +47,26 @@ var createCmd = &cobra.Command{
 		provides := viper.GetStringSlice("provides")
 		requires := viper.GetStringSlice("requires")
 
-		pkg := models.NewPkg(name, version)
+		p := model.NewPkg(name, version)
 
 		//TODO: validate parameters
 		if release != "" {
-			pkg.Release = release
+			p.Release = release
 		}
 		if description != "" {
-			pkg.Description = description
+			p.Description = description
 		}
 		if summary != "" {
-			pkg.Summary = summary
+			p.Summary = summary
 		}
 		if pkgType != "" {
-			pkg.Package = pkgType
+			p.Package = pkgType
 		}
 		if platform != "" {
-			pkg.Platform = platform
+			p.Platform = platform
 		}
-		pkg.Provides = provides
-		pkg.Requires = requires
+		p.Provides = provides
+		p.Requires = requires
 
 		if len(args) > 0 {
 			for _, filepath := range args {
@@ -75,14 +77,14 @@ var createCmd = &cobra.Command{
 				}
 				md5sum := md5.Sum(raw) // nolint:gosec
 				sha256sum := sha256.Sum256(raw)
-				src := &models.Source{
+				src := &source.Source{
 					Archive: filepath,
 					MD5:     fmt.Sprintf("%x", md5sum),
 					SHA256:  fmt.Sprintf("%x", sha256sum),
 				}
-				pkg.Sources = append(pkg.Sources, *src)
+				p.Sources = append(p.Sources, *src)
 				unpack := "tar -xvf " + filepath + " && cd " + name + "-" + version
-				instruction := &models.Instruction{
+				instruction := &instructions.Instruction{
 					Build:     "make",
 					Configure: "./configure --prefix=/usr",
 					Install:   "make install",
@@ -91,11 +93,11 @@ var createCmd = &cobra.Command{
 					Test:      "make check",
 					Unpack:    unpack,
 				}
-				pkg.Instructions = append(pkg.Instructions, *instruction)
+				p.Instructions = append(p.Instructions, *instruction)
 			}
 		}
 
-		yml, err := pkg.ToYAML()
+		yml, err := p.ToYAML()
 		if err != nil {
 			return err
 		}

@@ -12,7 +12,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/xbcsmith/pkgcli/models"
+	"github.com/xbcsmith/pkgcli/lpak/common"
+	"github.com/xbcsmith/pkgcli/lpak/model"
 )
 
 // fetchCmd represents the fetch command
@@ -21,7 +22,7 @@ var fetchCmd = &cobra.Command{
 	Short: "fetch package binaries",
 	Long:  `fetch package binaries`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		viper.SetEnvPrefix("PACKAGE")
+		viper.SetEnvPrefix("package")
 		viper.AutomaticEnv()
 		viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 		err := viper.BindPFlags(cmd.Flags())
@@ -41,50 +42,33 @@ var fetchCmd = &cobra.Command{
 			for _, filepath := range args {
 				content, err := ioutil.ReadFile(filepath)
 				if err != nil {
-					fmt.Println(err)
-					os.Exit(-1)
+					return err
 				}
-				pkg := &models.Pkg{
-					Description:  "",
-					Instructions: []models.Instruction{},
-					Name:         "",
-					Package:      "",
-					Platform:     "",
-					Provides:     []string{},
-					Release:      "",
-					Requires:     []string{},
-					Optional:     []string{},
-					Recommended:  []string{},
-					Sources:      []models.Source{},
-					Files:        []models.File{},
-					Summary:      "",
-					Version:      "",
-				}
-				isjson := models.IsJSON(content)
-				if !isjson {
-					pkg, err = models.DecodePkgFromYAML(bytes.NewReader(content))
+				var p = &model.Pkg{}
+				if !common.IsJSON(content) {
+					p, err = model.DecodePkgFromYAML(bytes.NewReader(content))
 					if err != nil {
 						return err
 					}
 				} else {
-					pkg, err = models.DecodePkgFromJSON(bytes.NewReader(content))
+					p, err = model.DecodePkgFromJSON(bytes.NewReader(content))
 					if err != nil {
 						return err
 					}
 				}
-				if len(pkg.Release) == 0 {
-					pkg.Release = models.NewRelease()
+				if len(p.Release) == 0 {
+					p.Release = common.NewRelease()
 				}
-				fmt.Printf("Name : %s\n", pkg.Name)
-				fmt.Printf("Version : %s\n", pkg.Version)
-				fmt.Printf("Release : %s\n", pkg.Release)
+				fmt.Printf("Name : %s\n", p.Name)
+				fmt.Printf("Version : %s\n", p.Version)
+				fmt.Printf("Release : %s\n", p.Release)
 				if err := os.MkdirAll(sourcedir, 0755); err != nil {
 					return err
 				}
 				var filelist []string
 
 				fmt.Printf("Downloading to %s\n", sourcedir)
-				filelist, err = pkg.FetchSources(sourcedir, force)
+				filelist, err = p.FetchSources(sourcedir, force)
 				if err != nil {
 					return err
 				}

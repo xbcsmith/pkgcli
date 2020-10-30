@@ -1,20 +1,21 @@
 // Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package pkg
+package remove
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// pkgCmd represents the pkg command
-var pkgCmd = &cobra.Command{
-	Use:   "pkg",
-	Short: "pkg command",
-	Long:  `pkg command`,
+// removeCmd represents the remove command
+var removeCmd = &cobra.Command{
+	Use:   "remove",
+	Short: "remove command",
+	Long:  `remove command`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		viper.SetEnvPrefix("package")
 		viper.AutomaticEnv()
@@ -26,12 +27,12 @@ var pkgCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-
+		fmt.Println("This is the remove command")
 		return nil
 	},
 }
 
-// NewPkgCmd returns a new pkg command
-func NewPkgCmd() *cobra.Command {
-	return pkgCmd
+// NewRemoveCmd returns a new remove command
+func NewRemoveCmd() *cobra.Command {
+	return removeCmd
 }

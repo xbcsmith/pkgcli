@@ -1,7 +1,7 @@
 // Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package model
 
 import (
 	"crypto/md5" // nolint:gosec
@@ -13,29 +13,44 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/fatih/structs"
+	"github.com/jinzhu/gorm"
+
+	"github.com/xbcsmith/pkgcli/lpak/common"
+	"github.com/xbcsmith/pkgcli/lpak/files"
+	"github.com/xbcsmith/pkgcli/lpak/instructions"
+	"github.com/xbcsmith/pkgcli/lpak/source"
 
 	yaml "gopkg.in/yaml.v3"
 )
 
 // Pkg struct for pkg
 type Pkg struct {
-	Description  string        `json:"description" yaml:"description"`
-	Instructions []Instruction `json:"instructions" yaml:"instructions"`
-	Name         string        `json:"name" yaml:"name"`
-	Version      string        `json:"version" yaml:"version"`
-	Package      string        `json:"package" yaml:"package"`
-	Arch         string        `json:"arch" yaml:"arch"`
-	Platform     string        `json:"platform" yaml:"platform"`
-	Summary      string        `json:"summary" yaml:"summary"`
-	Release      string        `json:"release" yaml:"release"`
-	Provides     []string      `json:"provides" yaml:"provides"`
-	Requires     []string      `json:"requires" yaml:"requires"`
-	Optional     []string      `json:"optional,omitempty" yaml:"optional,omitempty"`
-	Recommended  []string      `json:"recommended,omitempty" yaml:"recommended,omitempty"`
-	Sources      []Source      `json:"sources" yaml:"sources"`
-	Files        []File        `json:"files" yaml:"files"`
+	gorm.Model
+	ID           string `gorm:"primaryKey"`
+	Updated      int64  `gorm:"autoUpdateTime:nano"` // Use unix nano seconds as updating time
+	Created      int64  `gorm:"autoCreateTime"`      // Use unix seconds as creating time
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    time.Time                  `gorm:"index"`
+	PkgID        string                     `json:"id" yaml:"id"`
+	Description  string                     `json:"description" yaml:"description"`
+	Name         string                     `json:"name" yaml:"name"`
+	Version      string                     `json:"version" yaml:"version"`
+	Package      string                     `json:"package" yaml:"package"`
+	Arch         string                     `json:"arch" yaml:"arch"`
+	Platform     string                     `json:"platform" yaml:"platform"`
+	Summary      string                     `json:"summary" yaml:"summary"`
+	Release      string                     `json:"release" yaml:"release"`
+	Provides     []string                   `json:"provides" yaml:"provides"`
+	Requires     []string                   `json:"requires" yaml:"requires"`
+	Optional     []string                   `json:"optional,omitempty" yaml:"optional,omitempty"`
+	Recommended  []string                   `json:"recommended,omitempty" yaml:"recommended,omitempty"`
+	Instructions []instructions.Instruction `json:"instructions" yaml:"instructions"`
+	Sources      []source.Source            `json:"sources" yaml:"sources"`
+	Files        []files.File               `json:"files" yaml:"files"`
 }
 
 // Pkgs struct for pkgs
@@ -45,7 +60,7 @@ type Pkgs struct {
 
 // NewPkg func takes name and version as input and returns *Pkg
 func NewPkg(name, version string) *Pkg {
-	release := NewRelease()
+	release := common.NewRelease()
 	description := strings.Title(name) + " " + version + " " + release
 	return &Pkg{
 		Name:        name,
@@ -55,6 +70,7 @@ func NewPkg(name, version string) *Pkg {
 		Summary:     description,
 		Package:     "tar.xz",
 		Platform:    "x86_64-gnu-linux-9",
+		PkgID:       common.NewULIDAsString(),
 	}
 }
 
@@ -84,11 +100,11 @@ func (p *Pkg) FetchSources(destdir string, force bool) ([]string, error) {
 		filename := path.Base(src.Archive)
 		filepath := path.Join(destdir, filename)
 		fmt.Printf("FilePath : %s\n", filepath)
-		if force || !isFile(filepath) {
-			if isDir(filepath) {
+		if force || !common.IsFile(filepath) {
+			if common.IsDir(filepath) {
 				return nil, err
 			}
-			err := DownloadFile(filepath, src.Archive)
+			err := files.DownloadFile(filepath, src.Archive)
 			if err != nil {
 				return nil, err
 			}
@@ -112,7 +128,7 @@ func (p *Pkg) FetchSources(destdir string, force bool) ([]string, error) {
 			}
 		}
 		filelist = append(filelist, sha256sum+" "+filepath)
-		f := File{
+		f := files.File{
 			Path:   filepath,
 			Name:   filename,
 			Mode:   "0644", // TODO: get actual mode
@@ -179,7 +195,7 @@ mkdir -vp {$BUILDDIR,$SRCDIR,$DESTDIR,$PKGDIR}
 {{end}}
 `
 	data := structs.Map(p)
-	script, err := maketmpl(data, template)
+	script, err := common.MakeTemplate(data, template)
 	if err != nil {
 		return script, err
 	}

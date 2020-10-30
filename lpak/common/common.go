@@ -1,7 +1,7 @@
-// Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
+// Copyright © 2020 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package common
 
 import (
 	"bytes"
@@ -46,13 +46,14 @@ func NewULIDAsString() string {
 }
 
 // NewRelease returns a ULID as a release.
-// At some point I may switch back to epoch
+// using ULID as a release solves a crazy compare
+// problem and removes the need for an epoch
 func NewRelease() string {
 	return NewULIDAsString()
 }
 
-// maketmpl helper function
-func maketmpl(data map[string]interface{}, tmpl string) (string, error) {
+// MakeTemplate helper function
+func MakeTemplate(data map[string]interface{}, tmpl string) (string, error) {
 	builder := &strings.Builder{}
 	t := template.Must(template.New("new").Parse(tmpl))
 	if err := t.Execute(builder, data); err != nil {
@@ -85,7 +86,8 @@ func IsJSON(buf []byte) bool {
 	return false
 }
 
-func isFile(filename string) bool {
+// IsFile returns true if file exists and is not a dir
+func IsFile(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
@@ -93,7 +95,8 @@ func isFile(filename string) bool {
 	return !info.IsDir()
 }
 
-func isDir(dirname string) bool {
+// IsDir returns true if dir exists
+func IsDir(dirname string) bool {
 	info, err := os.Stat(dirname)
 	if os.IsNotExist(err) {
 		return false

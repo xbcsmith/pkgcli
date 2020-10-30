@@ -1,7 +1,7 @@
 // Copyright © 2019 Brett Smith <xbcsmith@gmail.com>, . All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package models
+package model
 
 import (
 	"fmt"
@@ -84,19 +84,6 @@ func TestNewPkg(t *testing.T) {
 	pkg := NewPkg("foo", "2.1.1")
 	assert.Assert(t, pkg.Name == "foo")
 	assert.Assert(t, pkg.Version == "2.1.1")
-}
-
-// TestNewULID func takes no input and returns t *testing.T
-func TestNewULID(t *testing.T) {
-	u, err := NewULID()
-	assert.Assert(t, is.Nil(err))
-	assert.Assert(t, len(u.String()) == 26)
-}
-
-// TestNewULIDAsString func takes no input and returns t *testing.T
-func TestNewULIDAsString(t *testing.T) {
-	u := NewULIDAsString()
-	assert.Assert(t, len(u) == 26)
 }
 
 // TestDecodePkgFromYAML func takes no input and returns t *testing.T

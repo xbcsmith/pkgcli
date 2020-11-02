@@ -3,5 +3,16 @@
 
 package group
 
+import "github.com/jinzhu/gorm"
+
 // TODO: so what is a group? prolly a collection of ULID.
 // really need to check requires and provides
+type Group struct {
+	gorm.Model
+	PkgIDs []PkgID
+}
+
+type PkgID struct {
+	gorm.Model
+	ID string
+}

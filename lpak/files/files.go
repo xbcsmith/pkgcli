@@ -12,10 +12,13 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 // File struct for file
 type File struct {
+	gorm.Model
 	Path   string `json:"path,omitempty" yaml:"path,omitempty"`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Mode   string `json:"mode,omitempty" yaml:"mode,omitempty"`
@@ -25,6 +28,7 @@ type File struct {
 
 // Files struct for files
 type Files struct {
+	gorm.Model
 	Files []File `json:"files" yaml:"files"`
 }
 

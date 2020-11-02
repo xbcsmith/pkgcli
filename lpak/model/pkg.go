@@ -19,10 +19,10 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/xbcsmith/pkgcli/lpak/common"
+	"github.com/xbcsmith/pkgcli/lpak/deps"
 	"github.com/xbcsmith/pkgcli/lpak/files"
 	"github.com/xbcsmith/pkgcli/lpak/instructions"
 	"github.com/xbcsmith/pkgcli/lpak/source"
-
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -35,7 +35,8 @@ type Pkg struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    time.Time                  `gorm:"index"`
-	PkgID        string                     `json:"id" yaml:"id"`
+	Installed    bool                       `json:"installed" yaml:"installed"`
+	PkgID        string                     `json:"pkgid" yaml:"pkgid"`
 	Description  string                     `json:"description" yaml:"description"`
 	Name         string                     `json:"name" yaml:"name"`
 	Version      string                     `json:"version" yaml:"version"`
@@ -44,10 +45,10 @@ type Pkg struct {
 	Platform     string                     `json:"platform" yaml:"platform"`
 	Summary      string                     `json:"summary" yaml:"summary"`
 	Release      string                     `json:"release" yaml:"release"`
-	Provides     []string                   `json:"provides" yaml:"provides"`
-	Requires     []string                   `json:"requires" yaml:"requires"`
-	Optional     []string                   `json:"optional,omitempty" yaml:"optional,omitempty"`
-	Recommended  []string                   `json:"recommended,omitempty" yaml:"recommended,omitempty"`
+	Provides     []deps.Dependency          `json:"provides" yaml:"provides"`
+	Requires     []deps.Dependency          `json:"requires" yaml:"requires"`
+	Optional     []deps.Dependency          `json:"optional,omitempty" yaml:"optional,omitempty"`
+	Recommended  []deps.Dependency          `json:"recommended,omitempty" yaml:"recommended,omitempty"`
 	Instructions []instructions.Instruction `json:"instructions" yaml:"instructions"`
 	Sources      []source.Source            `json:"sources" yaml:"sources"`
 	Files        []files.File               `json:"files" yaml:"files"`
